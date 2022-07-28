@@ -13,24 +13,27 @@ from stac_fastapi.types.core import BaseCoreClient, NumType
 from stac_fastapi.types.search import BaseSearchPostRequest, Union
 
 
-def pystac_to_collection(col):
-    return stac_types.Collection(
-        {
-            "type": col.catalog_type,
-            "stac_version": pystac.version.get_stac_version(),
-            "stac_extensions": col.stac_extensions,
-            "id": col.id,
-            "title": col.title,
-            "description": col.description,
-            "links": [link.to_dict() for link in col.links],
-            "keywords": col.extra_fields["keywords"],
-            "license": col.license,
-            "providers": col.extra_fields["providers"],
-            "extent": col.extent.to_dict(),
-            "summaries": col.summaries.to_dict(),
-            "assets": {name: asset.to_dict() for name, asset in col.assets.items()},
-        }
-    )
+def catalog_to_dict(cat):
+    return {
+        "type": cat.catalog_type,
+        "stac_version": pystac.version.get_stac_version(),
+        "stac_extensions": cat.stac_extensions,
+        "id": cat.id,
+        "title": cat.title,
+        "description": cat.description,
+        "links": [link.to_dict() for link in cat.links],
+    }
+
+
+def collection_to_dict(col):
+    return catalog_to_dict(col) | {
+        "keywords": col.extra_fields["keywords"],
+        "license": col.license,
+        "providers": col.extra_fields["providers"],
+        "extent": col.extent.to_dict(),
+        "summaries": col.summaries.to_dict(),
+        "assets": {name: asset.to_dict() for name, asset in col.assets.items()},
+    }
 
 
 @attr.s
@@ -68,7 +71,8 @@ class StaticCatalogClient(BaseCoreClient):
         print("parameters:", dict(request.query_params))
         print("base url:", request.base_url)
         collections = [
-            pystac_to_collection(col) for col in self.catalog.get_all_collections()
+            stac_types.Collection(collection_to_dict(col))
+            for col in self.catalog.get_all_collections()
         ]
         return stac_types.Collections(
             {
