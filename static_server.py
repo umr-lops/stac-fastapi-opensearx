@@ -82,7 +82,12 @@ class StaticCatalogClient(BaseCoreClient):
         )
 
     def get_collection(self, collection_id: str, **kwargs) -> stac_types.Collection:
-        print(kwargs)
+        print("kwargs:", kwargs)
+        obj = self.catalog.get_child(collection_id)
+        if isinstance(obj, pystac.Collection):
+            return stac_types.Collection(collection_to_dict(obj))
+        else:
+            return stac_types.Collection({})
 
     def item_collection(
         self, collection_id: str, limit: int = 10, token: str = None, **kwargs
