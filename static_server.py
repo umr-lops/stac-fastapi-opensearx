@@ -37,6 +37,21 @@ def collection_to_dict(col):
     }
 
 
+def item_to_dict(item):
+    return {
+        "type": pystac.stac_object.STACObjectType.ITEM,
+        "stac_version": pystac.version.get_stac_version(),
+        "stac_extensions": item.stac_extensions,
+        "id": item.id,
+        "geometry": item.geometry,
+        "bbox": item.bbox,
+        "properties": item.properties,
+        "links": [link.to_dict() for link in item.links],
+        "assets": {name: asset.to_dict() for name, asset in item.assets.items()},
+        "collection": item.collection_id,
+    }
+
+
 @attr.s
 class StaticCatalogClient(BaseCoreClient):
     """A client to search a static STAC catalog"""
@@ -93,7 +108,20 @@ class StaticCatalogClient(BaseCoreClient):
     def item_collection(
         self, collection_id: str, limit: int = 10, token: str = None, **kwargs
     ) -> stac_types.ItemCollection:
-        pass
+        print("kwargs:", kwargs)
+        obj = self.catalog.get_child(collection_id)
+        if isinstance(obj, pystac.Collection):
+            raw_items = obj.get_items()
+            items = [stac_types.Item(item_to_dict(item)) for item in raw_items]
+            return stac_types.ItemCollection(
+                {
+                    "type": "FeatureCollection",
+                    "features": items,
+                    "links": [link.to_dict() for link in obj.links],
+                }
+            )
+        else:
+            return stac_types.ItemCollection({})
 
 
 settings = config.ApiSettings(app_host="127.0.0.1", app_port=9588)
