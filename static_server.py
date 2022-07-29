@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import argparse
+import pathlib
 from datetime import datetime
 from typing import List, Optional
 
@@ -126,8 +128,11 @@ class StaticCatalogClient(BaseCoreClient):
 
 settings = config.ApiSettings(app_host="127.0.0.1", app_port=9588)
 
-catalog = pystac.read_file("daymet/catalog.json")
+parser = argparse.ArgumentParser()
+parser.add_argument("path", type=pathlib.Path)
+args = parser.parse_args()
 
+catalog = pystac.read_file(args.path)
 client = StaticCatalogClient(catalog=catalog)
 
 extensions = [
