@@ -15,7 +15,7 @@ from stac_fastapi.types.search import BaseSearchPostRequest, Union
 
 def catalog_to_dict(cat):
     return {
-        "type": cat.catalog_type,
+        "type": pystac.stac_object.STACObjectType.CATALOG,
         "stac_version": pystac.version.get_stac_version(),
         "stac_extensions": cat.stac_extensions,
         "id": cat.id,
@@ -27,6 +27,7 @@ def catalog_to_dict(cat):
 
 def collection_to_dict(col):
     return catalog_to_dict(col) | {
+        "type": pystac.stac_object.STACObjectType.COLLECTION,
         "keywords": col.extra_fields["keywords"],
         "license": col.license,
         "providers": col.extra_fields["providers"],
