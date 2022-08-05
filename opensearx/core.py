@@ -10,7 +10,7 @@ from stac_fastapi.types import stac as stac_types
 from stac_fastapi.types.core import AsyncBaseCoreClient, NumType
 from stac_fastapi.types.search import BaseSearchPostRequest, Union
 
-from . import atom, json
+from . import atom, json, types
 
 console = rich.console.Console()
 
@@ -57,12 +57,19 @@ class OpensearxApiClient(AsyncBaseCoreClient):
             return self.parse(await r.text())
 
     async def all_collections(self, **kwargs) -> stac_types.Collections:
-        pass
+        content = await self.query_api(f"/collections.{self.format}")
+        entries = [types.Collection(**entry) for entry in content["entries"]]
+
+        return types.Collections(entries=entries).to_stac()
 
     async def get_collection(
         self, collection_id: str, **kwargs
     ) -> stac_types.Collection:
-        pass
+        all_collections = await self.all_collections(**kwargs)
+        for col in all_collections["collections"]:
+            if col["id"] == collection_id:
+                return col
+        return stac_types.Collection({})
 
     async def get_item(self, item_id: str, collection_id: str, **kwargs):
         pass
