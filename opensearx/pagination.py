@@ -54,7 +54,7 @@ def post_link(rel, url, page, total_pages, limit):
             return {}
 
         return {
-            "rel": "next",
+            "rel": "prev",
             "href": url,
             "method": "POST",
             "body": {
