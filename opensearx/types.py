@@ -1,5 +1,6 @@
 import itertools
 from typing import Any, Dict, List, Optional
+from urllib.parse import parse_qs, urlsplit
 
 import attrs
 from stac_fastapi.types import stac as stac_types
@@ -74,6 +75,12 @@ def geometry_to_bbox(where):
     return min(lon), min(lat), max(lon), max(lat)
 
 
+def extract_uid(url):
+    components = urlsplit(url)
+    params = parse_qs(components.query)
+    return "-".join(elem.removesuffix(".nc") for elem in params.get("uid", [url]))
+
+
 @attrs.define
 class Item:
     title: str
@@ -97,13 +104,14 @@ class Item:
     def to_stac(self):
         stac_links = {link.pop("rel"): link for link in self.links}
         start_datetime, end_datetime = self.updated.split("/")
+        id = extract_uid(self.id)
         return stac_types.Item(
             type="Feature",
             stac_version=stac_version,
             stac_extensions=[],
             geometry=self.where,
             bbox=geometry_to_bbox(self.where),
-            id=self.id,
+            id=id,
             assets=stac_links,
             datetime=None,
             properties={"start_datetime": start_datetime, "end_datetime": end_datetime},
