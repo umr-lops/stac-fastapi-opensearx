@@ -6,11 +6,12 @@ from typing import List, Optional
 import aiohttp
 import attrs
 import rich.console
+from stac_fastapi.types import errors
 from stac_fastapi.types import stac as stac_types
 from stac_fastapi.types.core import AsyncBaseCoreClient, NumType
 from stac_fastapi.types.search import BaseSearchPostRequest, Union
 
-from . import atom, json, types
+from . import atom, json, pagination, types
 
 console = rich.console.Console()
 
@@ -95,4 +96,69 @@ class OpensearxApiClient(AsyncBaseCoreClient):
         pass
 
     async def post_search(self, search_request: BaseSearchPostRequest, **kwargs):
-        pass
+        request = kwargs["request"]
+        request_params = await request.json()
+
+        console.print("request body:", request_params)
+
+        params = {}
+
+        collections = search_request.collections
+        if collections is None:
+            raise errors.InvalidQueryParameter("Cannot search on all collections")
+        elif len(collections) > 1:
+            raise errors.InvalidQueryParameter("Cannot search more than one collection")
+        elif len(collections) == 0:
+            raise errors.InvalidQueryParameter("Need to search at least one collection")
+        else:
+            params["datasetId"] = collections[0]
+
+        if search_request.bbox is not None:
+            params["geoBox"] = ",".join(f"{v}" for v in search_request.bbox)
+
+        if search_request.datetime is not None:
+            parts = search_request.datetime.split("/")
+            if len(parts) != 2:
+                raise errors.InvalidQueryParameter(
+                    f"invalid datetime format: {search_request.datetime}"
+                )
+            start, end = parts
+            params["timeStart"] = start
+            params["timeEnd"] = end
+        else:
+            params["timeStart"] = "1000-01-01T00:00:00Z"
+            params["timeEnd"] = "2200-01-01T23:59:59Z"
+
+        current_page = request_params.get("page", 1)
+
+        params["startPage"] = current_page - 1
+
+        console.print(search_request)
+
+        if search_request.limit is not None:
+            params["count"] = search_request.limit
+
+        console.print(params)
+
+        response = await self.query_api(f"/granules.{self.format}", params=params)
+        console.print(response)
+
+        feed = response.get("feed")
+        if feed is None:
+            raise errors.StacApiError("backend server returned invalid feed")
+
+        entries = response.get("entries", [])
+        items = [types.Item(**entry) for entry in entries]
+
+        n_results = int(feed.get("opensearch_totalresults", "0"))
+        links = pagination.generate_post_pagination_links(
+            request,
+            page=current_page,
+            n_results=n_results,
+            limit=search_request.limit,
+        )
+        return stac_types.ItemCollection(
+            type="FeatureCollection",
+            features=[item.to_stac() for item in items],
+            links=links,
+        )
