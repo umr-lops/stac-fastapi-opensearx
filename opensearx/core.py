@@ -154,6 +154,10 @@ class OpensearxApiClient(AsyncBaseCoreClient):
             n_results=n_results,
             limit=search_request.limit,
         )
+        item_ids = search_request.ids or []
+        if item_ids:
+            items = [item for item in items if item.id in item_ids]
+
         return stac_types.ItemCollection(
             type="FeatureCollection",
             features=[item.to_stac() for item in items],
