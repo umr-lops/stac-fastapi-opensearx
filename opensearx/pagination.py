@@ -33,7 +33,6 @@ def post_link(rel, url, page, total_pages, limit):
         }
     elif rel == "next":
         new_page = page + 1
-        print(f"new page for {rel}:", new_page)
         if new_page > total_pages:
             return {}
 
@@ -49,7 +48,6 @@ def post_link(rel, url, page, total_pages, limit):
         }
     elif rel == "prev":
         new_page = page - 1
-        print(f"new page for {rel}:", new_page)
         if new_page < 1:
             return {}
 
@@ -70,13 +68,9 @@ def post_link(rel, url, page, total_pages, limit):
 def generate_post_pagination_links(request, *, page, n_results, limit):
     total_pages = math.ceil(n_results / limit)
 
-    print("current page:", page)
-    print("total pages:", total_pages)
-
     url = post_url(request.url)
     links = [
         post_link(rel=rel, url=url, page=page, total_pages=total_pages, limit=limit)
         for rel in ["prev", "self", "next"]
     ]
-    print("links:", links)
     return [link for link in links if link]

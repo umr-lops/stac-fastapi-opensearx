@@ -133,15 +133,10 @@ class OpensearxApiClient(AsyncBaseCoreClient):
 
         params["startPage"] = current_page - 1
 
-        console.print(search_request)
-
         if search_request.limit is not None:
             params["count"] = search_request.limit
 
-        console.print(params)
-
         response = await self.query_api(f"/granules.{self.format}", params=params)
-        console.print(response)
 
         feed = response.get("feed")
         if feed is None:
