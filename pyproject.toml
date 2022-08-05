@@ -18,6 +18,9 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 packages = ["opensearx"]
 
+[tool.setuptools_scm]
+fallback_version = "999"
+
 [tool.isort]
 profile = "black"
 skip_gitignore = true
