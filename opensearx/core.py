@@ -3,12 +3,16 @@ from __future__ import annotations
 from datetime import datetime
 from typing import List, Optional
 
+import aiohttp
 import attrs
+import rich.console
 from stac_fastapi.types import stac as stac_types
 from stac_fastapi.types.core import AsyncBaseCoreClient, NumType
 from stac_fastapi.types.search import BaseSearchPostRequest, Union
 
 from . import atom, json
+
+console = rich.console.Console()
 
 format_parsers = {
     "json": json.parse,
@@ -26,7 +30,7 @@ class OpensearxApiClient(AsyncBaseCoreClient):
         The url of the opensearx json api
     """
 
-    url = attrs.field(default="https://opensearch.ifremer.fr/granules.{format}")
+    url = attrs.field(default="https://opensearch.ifremer.fr")
     format = attrs.field(default="atom")
 
     @format.validator
@@ -39,7 +43,18 @@ class OpensearxApiClient(AsyncBaseCoreClient):
 
     def __attrs_post_init__(self):
         self.url = self.url.format(format=self.format)
-        self.parser = format_parsers.get(self.format)
+        self.session = aiohttp.ClientSession()
+        self.parse = format_parsers.get(self.format)
+
+    async def close(self):
+        await self.session.close()
+
+    async def query_api(self, path, params={}):
+        url = f"{self.url}{path}"
+        console.print("requesting from:", url)
+        console.print("with params:", params)
+        async with self.session.get(url, params=params) as r:
+            return self.parse(await r.text())
 
     async def all_collections(self, **kwargs) -> stac_types.Collections:
         pass
