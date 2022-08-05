@@ -129,6 +129,8 @@ class OpensearxApiClient(AsyncBaseCoreClient):
             params["timeStart"] = "1000-01-01T00:00:00Z"
             params["timeEnd"] = "2200-01-01T23:59:59Z"
 
+        console.print(search_request)
+
         current_page = request_params.get("page", 1)
 
         params["startPage"] = current_page - 1
