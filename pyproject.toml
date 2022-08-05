@@ -1,3 +1,23 @@
+[project]
+name = "stac-fastapi-opensearx"
+requires-python = ">= 3.10"
+license = {text = "MIT"}
+dependencies = [
+    "stac-fastapi.api",
+    "stac-fastapi.types",
+    "stac-fastapi.extensions",
+    "starlette",
+    "aiohttp",
+]
+dynamic = ["version"]
+
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["opensearx"]
+
 [tool.isort]
 profile = "black"
 skip_gitignore = true
