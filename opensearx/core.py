@@ -93,7 +93,71 @@ class OpensearxApiClient(AsyncBaseCoreClient):
         sortby: Optional[str] = None,
         **kwargs,
     ):
-        pass
+        request = kwargs["request"]
+        request_params = request.query_params
+
+        console.print("request params:", request_params)
+
+        params = {}
+
+        if collections is None:
+            raise errors.InvalidQueryParameter("Cannot search on all collections")
+        elif len(collections) > 1:
+            raise errors.InvalidQueryParameter("Cannot search more than one collection")
+        elif len(collections) == 0:
+            raise errors.InvalidQueryParameter("Need to search at least one collection")
+        else:
+            params["datasetId"] = collections[0]
+
+        if bbox is not None:
+            params["geoBox"] = ",".join(f"{v}" for v in bbox)
+
+        if datetime is not None:
+            parts = datetime.split("/")
+            if len(parts) != 2:
+                raise errors.InvalidQueryParameter(
+                    f"invalid datetime format: {datetime}"
+                )
+            start, end = parts
+            params["timeStart"] = start
+            params["timeEnd"] = end
+        else:
+            params["timeStart"] = "1000-01-01T00:00:00Z"
+            params["timeEnd"] = "2200-01-01T23:59:59Z"
+
+        if limit is not None:
+            params["count"] = limit
+
+        current_page = int(request_params.get("page", "1"))
+
+        params["startPage"] = current_page - 1
+
+        response = await self.query_api(f"/granules.{self.format}", params=params)
+
+        feed = response.get("feed")
+        if feed is None:
+            raise errors.StacApiError("backend server returned invalid feed")
+
+        entries = response.get("entries", [])
+        items = [types.Item(**entry).to_stac() for entry in entries]
+
+        n_results = int(feed.get("opensearch_totalresults", "0"))
+        links = pagination.generate_get_pagination_links(
+            request,
+            page=current_page,
+            n_results=n_results,
+            limit=limit,
+        )
+        item_ids = ids or []
+        if item_ids:
+            console.print("filtering:", items, "with:", item_ids)
+            items = [item for item in items if item["id"] in item_ids]
+
+        return stac_types.ItemCollection(
+            type="FeatureCollection",
+            features=items,
+            links=links,
+        )
 
     async def post_search(self, search_request: BaseSearchPostRequest, **kwargs):
         request = kwargs["request"]
