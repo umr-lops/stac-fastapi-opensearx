@@ -9,9 +9,9 @@ import rich.console
 from stac_fastapi.types import errors
 from stac_fastapi.types import stac as stac_types
 from stac_fastapi.types.core import AsyncBaseCoreClient, NumType
-from stac_fastapi.types.search import BaseSearchPostRequest, Union
+from stac_fastapi.types.search import BaseSearchGetRequest, BaseSearchPostRequest, Union
 
-from . import atom, json, pagination, types
+from . import atom, json, pagination, types, webapi
 
 console = rich.console.Console()
 
@@ -98,39 +98,22 @@ class OpensearxApiClient(AsyncBaseCoreClient):
 
         console.print("request params:", request_params)
 
-        params = {}
+        search_request = BaseSearchGetRequest(
+            collections=collections,
+            ids=ids,
+            bbox=bbox,
+            datetime=datetime,
+            limit=limit,
+        )
 
-        if collections is None:
-            raise errors.InvalidQueryParameter("Cannot search on all collections")
-        elif len(collections) > 1:
-            raise errors.InvalidQueryParameter("Cannot search more than one collection")
-        elif len(collections) == 0:
-            raise errors.InvalidQueryParameter("Need to search at least one collection")
-        else:
-            params["datasetId"] = collections[0]
+        console.print(search_request)
 
-        if bbox is not None:
-            params["geoBox"] = ",".join(f"{v}" for v in bbox)
-
-        if datetime is not None:
-            parts = datetime.split("/")
-            if len(parts) != 2:
-                raise errors.InvalidQueryParameter(
-                    f"invalid datetime format: {datetime}"
-                )
-            start, end = parts
-            params["timeStart"] = start
-            params["timeEnd"] = end
-        else:
-            params["timeStart"] = "1000-01-01T00:00:00Z"
-            params["timeEnd"] = "2200-01-01T23:59:59Z"
-
-        if limit is not None:
-            params["count"] = limit
-
-        current_page = int(request_params.get("page", "1"))
-
-        params["startPage"] = current_page - 1
+        current_page = int(request_params.get("page", 1))
+        params = webapi.translate_request(
+            search_request,
+            additional={"page": current_page},
+            opensearch_dialect="ifremer",
+        )
 
         response = await self.query_api(f"/granules.{self.format}", params=params)
 
@@ -146,7 +129,7 @@ class OpensearxApiClient(AsyncBaseCoreClient):
             request,
             page=current_page,
             n_results=n_results,
-            limit=limit,
+            limit=search_request.limit,
         )
         item_ids = ids or []
         if item_ids:
@@ -165,42 +148,14 @@ class OpensearxApiClient(AsyncBaseCoreClient):
 
         console.print("request body:", request_params)
 
-        params = {}
-
-        collections = search_request.collections
-        if collections is None:
-            raise errors.InvalidQueryParameter("Cannot search on all collections")
-        elif len(collections) > 1:
-            raise errors.InvalidQueryParameter("Cannot search more than one collection")
-        elif len(collections) == 0:
-            raise errors.InvalidQueryParameter("Need to search at least one collection")
-        else:
-            params["datasetId"] = collections[0]
-
-        if search_request.bbox is not None:
-            params["geoBox"] = ",".join(f"{v}" for v in search_request.bbox)
-
-        if search_request.datetime is not None:
-            parts = search_request.datetime.split("/")
-            if len(parts) != 2:
-                raise errors.InvalidQueryParameter(
-                    f"invalid datetime format: {search_request.datetime}"
-                )
-            start, end = parts
-            params["timeStart"] = start
-            params["timeEnd"] = end
-        else:
-            params["timeStart"] = "1000-01-01T00:00:00Z"
-            params["timeEnd"] = "2200-01-01T23:59:59Z"
-
         console.print(search_request)
 
         current_page = request_params.get("page", 1)
-
-        params["startPage"] = current_page - 1
-
-        if search_request.limit is not None:
-            params["count"] = search_request.limit
+        params = webapi.translate_request(
+            search_request,
+            additional={"page": current_page},
+            opensearch_dialect="ifremer",
+        )
 
         response = await self.query_api(f"/granules.{self.format}", params=params)
 
