@@ -1,5 +1,7 @@
 from stac_fastapi.types import errors
 
+from . import types
+
 
 def translate_request_ifremer(search_request, additional):
     default_start_time = "1000-01-01T00:00:00Z"
@@ -57,3 +59,15 @@ def translate_request(request, additional, opensearch_dialect):
         raise ValueError(f"unknown opensearch dialect: {opensearch_dialect}")
 
     return translate(request, additional)
+
+
+def translate_response(response, current_page, limit):
+    feed = response.get("feed")
+    if feed is None:
+        raise errors.StacApiError("backend server returned invalid feed")
+    n_results = int(feed.get("opensearch_totalresults", "0"))
+
+    entries = response.get("entries", [])
+    items = [types.Item(**entry).to_stac() for entry in entries]
+
+    return n_results, items

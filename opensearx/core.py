@@ -6,7 +6,6 @@ from typing import List, Optional
 import aiohttp
 import attrs
 import rich.console
-from stac_fastapi.types import errors
 from stac_fastapi.types import stac as stac_types
 from stac_fastapi.types.core import AsyncBaseCoreClient, NumType
 from stac_fastapi.types.search import BaseSearchGetRequest, BaseSearchPostRequest, Union
@@ -118,21 +117,16 @@ class OpensearxApiClient(AsyncBaseCoreClient):
 
         response = await self.query_api(f"/granules.{self.format}", params=params)
 
-        feed = response.get("feed")
-        if feed is None:
-            raise errors.StacApiError("backend server returned invalid feed")
+        n_results, items = webapi.translate_response(response)
 
-        entries = response.get("entries", [])
-        items = [types.Item(**entry).to_stac() for entry in entries]
-
-        n_results = int(feed.get("opensearch_totalresults", "0"))
         links = pagination.generate_get_pagination_links(
             request,
             page=current_page,
             n_results=n_results,
             limit=search_request.limit,
         )
-        item_ids = ids or []
+
+        item_ids = search_request.ids or []
         if item_ids:
             console.print("filtering:", items, "with:", item_ids)
             items = [item for item in items if item["id"] in item_ids]
@@ -160,26 +154,22 @@ class OpensearxApiClient(AsyncBaseCoreClient):
 
         response = await self.query_api(f"/granules.{self.format}", params=params)
 
-        feed = response.get("feed")
-        if feed is None:
-            raise errors.StacApiError("backend server returned invalid feed")
+        n_results, items = webapi.translate_response(response)
 
-        entries = response.get("entries", [])
-        items = [types.Item(**entry) for entry in entries]
-
-        n_results = int(feed.get("opensearch_totalresults", "0"))
-        links = pagination.generate_post_pagination_links(
+        links = pagination.generate_get_pagination_links(
             request,
             page=current_page,
             n_results=n_results,
             limit=search_request.limit,
         )
+
         item_ids = search_request.ids or []
         if item_ids:
-            items = [item for item in items if item.id in item_ids]
+            console.print("filtering:", items, "with:", item_ids)
+            items = [item for item in items if item["id"] in item_ids]
 
         return stac_types.ItemCollection(
             type="FeatureCollection",
-            features=[item.to_stac() for item in items],
+            features=items,
             links=links,
         )
