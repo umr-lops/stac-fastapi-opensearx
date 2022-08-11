@@ -1,3 +1,4 @@
+import re
 from urllib.parse import urlencode
 
 import pytest
@@ -88,6 +89,15 @@ def additional_information(draw):
     return {"page": draw(st.integers(min_value=1))}
 
 
+def is_int(obj):
+    return isinstance(obj, int) or (isinstance(obj, str) and obj.isdecimal())
+
+
+number_re = r"-?\d+(?:\.\d+(?:[eE]-?\d+)?)?"
+bbox_re = re.compile(rf"{number_re}(?:,{number_re}){{3}}")
+time_re = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z")
+
+
 @given(search_request(), additional_information())
 def test_opensearch_webapi_ifremer(r, a):
     if not r.collections or len(r.collections) > 1:
@@ -97,8 +107,21 @@ def test_opensearch_webapi_ifremer(r, a):
 
     params = webapi.translate_request_ifremer(r, a)
 
-    assert isinstance(params, dict)
+    valid_keys = ["datasetId", "startPage", "count", "timeStart", "timeEnd", "geoBox"]
+
+    assert isinstance(params, dict) and all([key in valid_keys for key in params])
     assert "datasetId" in params
+
+    assert "startPage" in params and is_int(params["startPage"])
+    assert "count" in params and is_int(params["count"])
+
+    if "geoBox" in params:
+        assert bbox_re.match(params["geoBox"])
+
+    if "timeStart" in params:
+        assert time_re.match(params["timeStart"])
+    if "timeEnd" in params:
+        assert time_re.match(params["timeEnd"])
 
     query = urlencode(params)
     assert query
