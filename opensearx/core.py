@@ -32,6 +32,7 @@ class OpensearxApiClient(AsyncBaseCoreClient):
     """
 
     url = attrs.field(default="https://opensearch.ifremer.fr")
+    dialect = attrs.field(default="ifremer")
     format = attrs.field(default="atom")
 
     @format.validator
@@ -112,7 +113,7 @@ class OpensearxApiClient(AsyncBaseCoreClient):
         params = webapi.translate_request(
             search_request,
             additional={"page": current_page},
-            opensearch_dialect="ifremer",
+            opensearch_dialect=self.dialect,
         )
 
         response = await self.query_api(f"/granules.{self.format}", params=params)
@@ -154,7 +155,7 @@ class OpensearxApiClient(AsyncBaseCoreClient):
         params = webapi.translate_request(
             search_request,
             additional={"page": current_page},
-            opensearch_dialect="ifremer",
+            opensearch_dialect=self.dialect,
         )
 
         response = await self.query_api(f"/granules.{self.format}", params=params)
