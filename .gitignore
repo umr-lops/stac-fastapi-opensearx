@@ -1,3 +1,7 @@
 .ipynb_checkpoints/
 *.py[co]
 __pycache__/
+*.egg-info
+
+build/
+.hypothesis/
