@@ -48,7 +48,7 @@ class Collection:
                 "license": "proprietary",
                 "extent": {
                     "spatial": {"bbox": ""},
-                    "temporal": {"interval": ["1900-01-01", "2100-01-01"]},
+                    "temporal": {"interval": [["1900-01-01", "2100-01-01"]]},
                 },
                 "providers": [],
                 "summaries": {},
