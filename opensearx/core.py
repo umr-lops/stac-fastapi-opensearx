@@ -55,11 +55,13 @@ class OpensearxApiClient(AsyncBaseCoreClient):
         del self.session
 
     async def query_api(self, path, params={}):
+        from urllib.parse import urlencode
+
         if self.session is None:
             self.session = aiohttp.ClientSession()
         url = f"{self.url}{path}"
         console.print("requesting from:", url)
-        console.print("with params:", params)
+        console.print("with params:", urlencode(params))
         async with self.session.get(url, params=params) as r:
             return self.parse(await r.text())
 
