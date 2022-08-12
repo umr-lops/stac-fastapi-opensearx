@@ -33,6 +33,7 @@ class OpensearxApiClient(AsyncBaseCoreClient):
     url = attrs.field(default="https://opensearch.ifremer.fr")
     dialect = attrs.field(default="ifremer")
     format = attrs.field(default="atom")
+    session = attrs.field(default=None)
 
     @format.validator
     def _valid_format(self, attribute, value):
@@ -44,13 +45,18 @@ class OpensearxApiClient(AsyncBaseCoreClient):
 
     def __attrs_post_init__(self):
         self.url = self.url.format(format=self.format)
-        self.session = aiohttp.ClientSession()
         self.parse = format_parsers.get(self.format)
 
     async def close(self):
+        if self.session is None:
+            return
+
         await self.session.close()
+        del self.session
 
     async def query_api(self, path, params={}):
+        if self.session is None:
+            self.session = aiohttp.ClientSession()
         url = f"{self.url}{path}"
         console.print("requesting from:", url)
         console.print("with params:", params)
