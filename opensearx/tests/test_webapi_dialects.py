@@ -6,7 +6,7 @@ from hypothesis import given, note
 from hypothesis import strategies as st
 from stac_fastapi.types import errors, search
 
-from opensearx import webapi
+from opensearx.webapi import dialects
 
 methods = {
     "GET": search.BaseSearchGetRequest,
@@ -99,13 +99,13 @@ time_re = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z")
 
 
 @given(search_request(), additional_information())
-def test_opensearch_webapi_ifremer(r, a):
+def test_dialect_ifremer(r, a):
     if not r.collections or len(r.collections) > 1:
         with pytest.raises(errors.InvalidQueryParameter):
-            webapi.translate_request_ifremer(r, a)
+            dialects.translate_request_ifremer(r, a)
         return
 
-    params = webapi.translate_request_ifremer(r, a)
+    params = dialects.translate_request_ifremer(r, a)
 
     valid_keys = ["datasetId", "startPage", "count", "timeStart", "timeEnd", "geoBox"]
 

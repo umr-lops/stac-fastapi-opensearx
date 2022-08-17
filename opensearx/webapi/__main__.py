@@ -2,7 +2,7 @@ import argparse
 
 from .app import create_api
 from .core import format_parsers
-from .webapi import dialects
+from .dialects import dialects
 
 parser = argparse.ArgumentParser()
 parser.add_argument("url", help="base url of the opensearch api")
@@ -36,7 +36,7 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(
-        "opensearx.__main__:app",
+        "opensearx.webapi.__main__:app",
         host=args.host,
         port=args.port,
         log_level=args.log_level,

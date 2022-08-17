@@ -1,6 +1,6 @@
 from stac_fastapi.types import errors
 
-from . import types
+from .. import types
 
 
 def translate_request_ifremer(search_request, additional):

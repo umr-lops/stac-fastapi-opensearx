@@ -10,7 +10,8 @@ from stac_fastapi.types import stac as stac_types
 from stac_fastapi.types.core import AsyncBaseCoreClient, NumType
 from stac_fastapi.types.search import BaseSearchGetRequest, BaseSearchPostRequest, Union
 
-from . import atom, json, pagination, types, webapi
+from .. import pagination, types
+from . import atom, dialects, json
 
 console = rich.console.Console()
 
@@ -117,7 +118,7 @@ class OpensearxApiClient(AsyncBaseCoreClient):
         console.print(search_request)
 
         current_page = int(request_params.get("page", 1))
-        params = webapi.translate_request(
+        params = dialects.translate_request(
             search_request,
             additional={"page": current_page},
             opensearch_dialect=self.dialect,
@@ -125,7 +126,7 @@ class OpensearxApiClient(AsyncBaseCoreClient):
 
         response = await self.query_api(f"/granules.{self.format}", params=params)
 
-        n_results, items = webapi.translate_response(response)
+        n_results, items = dialects.translate_response(response)
 
         links = pagination.generate_get_pagination_links(
             request,
@@ -154,7 +155,7 @@ class OpensearxApiClient(AsyncBaseCoreClient):
         console.print(search_request)
 
         current_page = request_params.get("page", 1)
-        params = webapi.translate_request(
+        params = dialects.translate_request(
             search_request,
             additional={"page": current_page},
             opensearch_dialect=self.dialect,
@@ -162,7 +163,7 @@ class OpensearxApiClient(AsyncBaseCoreClient):
 
         response = await self.query_api(f"/granules.{self.format}", params=params)
 
-        n_results, items = webapi.translate_response(response)
+        n_results, items = dialects.translate_response(response)
 
         links = pagination.generate_post_pagination_links(
             request,
