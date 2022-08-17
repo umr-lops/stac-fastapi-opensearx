@@ -33,7 +33,7 @@ class OpensearxApiClient(AsyncBaseCoreClient):
     url = attrs.field(default="https://opensearch.ifremer.fr")
     dialect = attrs.field(default="ifremer")
     format = attrs.field(default="atom")
-    session = attrs.field(default=None)
+    session = attrs.field(default=None, init=False)
 
     @format.validator
     def _valid_format(self, attribute, value):
