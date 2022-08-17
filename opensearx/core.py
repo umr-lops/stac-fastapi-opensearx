@@ -164,7 +164,7 @@ class OpensearxApiClient(AsyncBaseCoreClient):
 
         n_results, items = webapi.translate_response(response)
 
-        links = pagination.generate_get_pagination_links(
+        links = pagination.generate_post_pagination_links(
             request,
             page=current_page,
             n_results=n_results,
