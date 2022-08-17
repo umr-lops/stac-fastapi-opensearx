@@ -61,7 +61,7 @@ def translate_request(request, additional, opensearch_dialect):
     return translate(request, additional)
 
 
-def translate_response(response, current_page, limit):
+def translate_response(response):
     feed = response.get("feed")
     if feed is None:
         raise errors.StacApiError("backend server returned invalid feed")
