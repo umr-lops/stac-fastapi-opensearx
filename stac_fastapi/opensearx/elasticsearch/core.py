@@ -15,7 +15,7 @@ from .dialects import dialects
 # TODO: make this an async client once elasticsearch-dsl supports async
 @attrs.define
 class ElasticsearchClient(BaseCoreClient):
-    credentials = attrs.field()
+    credentials = attrs.field(default=None)
     timeout = attrs.field(
         default=20, validator=[validators.instance_of(int), validators.ge(0)]
     )
