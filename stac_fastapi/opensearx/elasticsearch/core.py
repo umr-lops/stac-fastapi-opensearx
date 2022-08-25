@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import List, Optional, Union
 
 import attrs
+from attrs import validators
 from elasticsearch import RequestsHttpConnection
 from elasticsearch_dsl import connections
 from stac_fastapi.types import stac as stac_types
@@ -16,9 +17,9 @@ from .dialects import dialects
 class ElasticsearchClient(BaseCoreClient):
     credentials = attrs.field()
     timeout = attrs.field(
-        default=20, validator=[attrs.validators.instanceof(int), attrs.validators.ge(0)]
+        default=20, validator=[validators.instance_of(int), validators.ge(0)]
     )
-    dialect = attrs.field(default="ifremer", validator=attrs.validators.in_(dialects))
+    dialect = attrs.field(default="ifremer", validator=validators.in_(dialects))
 
     session = attrs.field(default=None, init=False)
 
