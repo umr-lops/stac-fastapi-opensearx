@@ -6,7 +6,7 @@ from hypothesis import given, note
 from hypothesis import strategies as st
 from stac_fastapi.types import errors, search
 
-from opensearx.webapi import dialects
+from stac_fastapi.opensearx.webapi import dialects
 
 methods = {
     "GET": search.BaseSearchGetRequest,
