@@ -38,7 +38,7 @@ class ElasticsearchClient(BaseCoreClient):
         self.session = None
 
     def all_collections(self, **kwargs) -> stac_types.Collections:
-        pass
+        return stac_types.Collections(collections=[], links=[])
 
     def get_collection(self, collection_id: str, **kwargs) -> stac_types.Collection:
         pass
