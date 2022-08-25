@@ -36,7 +36,7 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(
-        "opensearx.webapi.__main__:app",
+        "stac_fastapi.opensearx.webapi.__main__:app",
         host=args.host,
         port=args.port,
         log_level=args.log_level,
