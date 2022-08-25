@@ -24,6 +24,9 @@ class ElasticsearchClient(BaseCoreClient):
     session = attrs.field(default=None, init=False)
 
     def __attrs_post_init__(self):
+        if self.credentials is None:
+            raise ValueError("need credentials to connect to the database")
+
         self.session = connections.create_connection(
             hosts=[self.credentials],
             timeout=self.timeout,
