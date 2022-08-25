@@ -1,4 +1,6 @@
 import argparse
+import json
+import pathlib
 
 from .app import create_api
 from .dialects import dialects
@@ -6,8 +8,8 @@ from .dialects import dialects
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--credentials",
-    type=argparse.FileType("r"),
-    help="credentials for the elasticsearch database",
+    type=pathlib.Path,
+    help="path to the credentials for the elasticsearch database",
     required=True,
 )
 parser.add_argument(
@@ -25,9 +27,13 @@ parser.add_argument(
 parser.add_argument("--log-level", default="info", help="verbosity of the server")
 
 args = parser.parse_args()
+if args.credentials.suffix == ".json":
+    credentials = json.loads(args.credentials.read_text())
+else:
+    credentials = credentials.read_text()
 
 api = create_api(
-    credentials=args.credentials, dialect=args.dialect, host=args.host, port=args.port
+    credentials=credentials, dialect=args.dialect, host=args.host, port=args.port
 )
 # app is used by uvicorn
 app = api.app
