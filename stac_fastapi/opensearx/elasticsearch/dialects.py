@@ -1,1 +1,3 @@
-dialects = {}
+dialects = {
+    "ifremer": None,
+}
