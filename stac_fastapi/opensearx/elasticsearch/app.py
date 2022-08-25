@@ -20,11 +20,11 @@ def create_api(*, credentials, host="127.0.0.1", port=9588, dialect="ifremer"):
     )
 
     @api.app.on_event("shutdown")
-    async def app_shutdown():
+    def app_shutdown():
         """shutdown the client to close the session
 
         If there's a way to have `StacApi` do that for us it would be better to put there.
         """
-        await client.close()
+        client.close()
 
     return api
