@@ -10,8 +10,10 @@ from stac_fastapi.types import stac as stac_types
 class Ifremer:
     session = attrs.field()
 
+    prefix = "isi_cersat_naiad_"
+
     def clean_index_name(self, name):
-        return name.removeprefix("isi_cersat_naiad_")
+        return name.removeprefix(self.prefix)
 
     def index_to_collection(self, index) -> stac_types.Collection:
         id = self.clean_index_name(index["index"])
