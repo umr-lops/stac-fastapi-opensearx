@@ -29,9 +29,8 @@ class Ifremer:
                 temporal=temporal_extent,
             ),
             title=id,
-        ).to_dict()
-
-        collection["links"] = []
+        )
+        collection.links = []
 
         return collection
 
@@ -45,9 +44,7 @@ class Ifremer:
         """
         # collections are stored in indices
         indices = self.session.cat.indices(format="json")
-        collections = [self.index_to_collection(index) for index in indices]
-
-        return stac_types.Collections(collections=collections, links=[])
+        return [self.index_to_collection(index) for index in indices]
 
     def collection(self, name) -> stac_types.Collection:
         """get a specific collection by name
@@ -55,8 +52,7 @@ class Ifremer:
         Since there's no way to get just a the info of a single index, we can just
         delegate to `collections`.
         """
-        all_collections = self.collections()
-        collections = {col["id"]: col for col in all_collections["collections"]}
+        collections = {col.id: col for col in self.collections()}
         col = collections.get(name)
         if name is None:
             raise errors.NotFoundError(f"could not find collection {name!r}")
