@@ -2,8 +2,16 @@ from datetime import datetime
 
 import attrs
 import pystac
+from elasticsearch_dsl import Search
 from stac_fastapi.types import errors
 from stac_fastapi.types import stac as stac_types
+
+
+def bbox_from_geometry(geometry):
+    from odc.geo import Geometry
+
+    geom = Geometry(geometry)
+    return geom.geom.bounds
 
 
 @attrs.define
@@ -61,8 +69,63 @@ class Ifremer:
 
         return col
 
-    def search(self, search_request, page, limit):
-        pass
+    def hit_to_item(self, hit):
+        fname = hit.meta.id
+
+        return pystac.Item(
+            id=fname,
+            geometry=hit.geometry.to_dict(),
+            datetime=None,
+            bbox=bbox_from_geometry(hit.geometry.to_dict()),
+            properties={
+                "start_datetime": hit.time_coverage_start,
+                "end_datetime": hit.time_coverage_end,
+            },
+        )
+
+    def search(self, search_request, page):
+        if search_request.collections:
+            indexes = [self.prefix + name for name in search_request.collections]
+        else:
+            indexes = "_all"
+
+        s = Search(index=indexes).using(self.session).extra(track_total_hits=True)
+
+        # temporal extent
+        if search_request.datetime:
+            # Items have a date range, and the query can have these forms:
+            # - a single datetime: in that case find any items that contain that datetime
+            # - a interval: find any items that are entirely contained within that item
+            if "/" in search_request.datetime:
+                lower_bound, upper_bound = search_request.datetime.split("/")
+
+                if lower_bound != "..":
+                    s = s.filter("range", time_coverage_start={"gte": lower_bound})
+
+                if upper_bound != "..":
+                    s = s.filter("range", time_coverage_end={"lte": upper_bound})
+            else:
+                # a single datetime
+                s = s.filter(
+                    "range", time_coverage_start={"lte": search_request.datetime}
+                ).filter("range", time_coverage_end={"gte": search_request.datetime})
+
+        # spatial extent
+        # if search_request.bbox:
+        #     pass
+
+        if search_request.limit:
+            lower = (page - 1) * search_request.limit
+            upper = page * search_request.limit
+
+            s = s[lower:upper]
+
+        result = s.execute()
+
+        items = [self.hit_to_item(hit) for hit in result.hits]
+        n_total = result.hits.total["value"]
+
+        return n_total, items
 
 
 dialects = {
