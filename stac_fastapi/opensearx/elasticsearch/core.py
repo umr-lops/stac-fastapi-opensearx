@@ -85,4 +85,22 @@ class ElasticsearchClient(BaseCoreClient):
     def post_search(
         self, search_request: BaseSearchPostRequest, **kwargs
     ) -> stac_types.ItemCollection:
-        pass
+        request = kwargs["request"]
+
+        # TODO: need to use `request.json()`, which is async
+        # In other words, we would need to switch the core client to async
+        # but: elasticsearch_dsl does not support async, yet.
+        current_page = request.query_params.get("page", 1)
+        n_total, items = self.client.search(search_request, page=current_page)
+
+        # links = pagination.generate_post_pagination_links(
+        #     request,
+        #     page=current_page,
+        #     n_results=n_total,
+        #     limit=search_request.limit,
+        # )
+
+        return stac_types.ItemCollection(
+            features=[item.to_dict() for item in items],
+            links=[],
+        )
