@@ -21,7 +21,7 @@ class ElasticsearchClient(BaseCoreClient):
     )
     dialect = attrs.field(default="ifremer", validator=validators.in_(dialects))
 
-    session = attrs.field(default=None, init=False)
+    client = attrs.field(default=None, init=False)
 
     def __attrs_post_init__(self):
         if self.credentials is None:
@@ -32,8 +32,12 @@ class ElasticsearchClient(BaseCoreClient):
             timeout=self.timeout,
             connection_class=RequestsHttpConnection,
         )
+        dialect_class = dialects.get(self.dialect)
+        self.client = dialect_class(self.session)
 
     def close(self):
+        self.client = None
+
         self.session.close()
         self.session = None
 
