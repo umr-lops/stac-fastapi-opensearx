@@ -7,8 +7,9 @@ from elasticsearch import RequestsHttpConnection
 from elasticsearch_dsl import connections
 from stac_fastapi.types import stac as stac_types
 from stac_fastapi.types.core import BaseCoreClient, NumType
-from stac_fastapi.types.search import BaseSearchGetRequest, BaseSearchPostRequest
+from stac_fastapi.types.search import BaseSearchPostRequest
 
+from .. import pagination
 from .dialects import dialects
 
 
@@ -73,14 +74,34 @@ class ElasticsearchClient(BaseCoreClient):
         sortby: Optional[str] = None,
         **kwargs,
     ) -> stac_types.ItemCollection:
-        search_request = BaseSearchGetRequest(
-            collections=collections,
-            ids=ids,
-            bbox=bbox,
-            datetime=datetime,
+        request = kwargs["request"]
+        params = request.query_params
+
+        current_page = int(params.get("page", "1"))
+
+        options = {
+            "collections": collections,
+            "ids": ids,
+            "bbox": bbox,
+            "datetime": datetime,
+            "limit": limit,
+        }
+        clean = {key: value for key, value in options.items() if value is not None}
+        search_request = BaseSearchPostRequest(**clean)
+
+        n_total, items = self.client.search(search_request, page=current_page)
+
+        links = pagination.generate_get_pagination_links(
+            request,
+            page=current_page,
+            n_results=n_total,
+            limit=search_request.limit,
         )
-        search_request  # stub
-        return None
+
+        return stac_types.ItemCollection(
+            features=[item.to_dict() for item in items],
+            links=links,
+        )
 
     def post_search(
         self, search_request: BaseSearchPostRequest, **kwargs
