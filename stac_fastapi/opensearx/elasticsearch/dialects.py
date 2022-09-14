@@ -96,19 +96,20 @@ class Ifremer:
             # Items have a date range, and the query can have these forms:
             # - a single datetime: in that case find any items that contain that datetime
             # - a interval: find any items that are entirely contained within that item
-            if "/" in search_request.datetime:
-                lower_bound, upper_bound = search_request.datetime.split("/")
+            def split_datetime(datetime):
+                if "/" not in datetime:
+                    # searching for exactly this datetime
+                    return datetime, datetime
 
-                if lower_bound != "..":
-                    s = s.filter("range", time_coverage_start={"gte": lower_bound})
+                return datetime.split("/")
 
-                if upper_bound != "..":
-                    s = s.filter("range", time_coverage_end={"lte": upper_bound})
-            else:
-                # a single datetime
-                s = s.filter(
-                    "range", time_coverage_start={"lte": search_request.datetime}
-                ).filter("range", time_coverage_end={"gte": search_request.datetime})
+            lower_bound, upper_bound = split_datetime(search_request.datetime)
+
+            if lower_bound != "..":
+                s = s.filter("range", time_coverage_start={"gte": lower_bound})
+
+            if upper_bound != "..":
+                s = s.filter("range", time_coverage_end={"lte": upper_bound})
 
         # spatial extent
         # if search_request.bbox:
