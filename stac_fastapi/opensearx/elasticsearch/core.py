@@ -3,10 +3,9 @@ from typing import List, Optional, Union
 
 import attrs
 from attrs import validators
-from elasticsearch import RequestsHttpConnection
-from elasticsearch_dsl import connections
+from elasticsearch import AsyncElasticsearch
 from stac_fastapi.types import stac as stac_types
-from stac_fastapi.types.core import BaseCoreClient, NumType
+from stac_fastapi.types.core import AsyncBaseCoreClient, NumType
 from stac_fastapi.types.search import BaseSearchPostRequest
 
 from .. import pagination
@@ -15,12 +14,13 @@ from .dialects import dialects
 
 # TODO: make this an async client once elasticsearch-dsl supports async
 @attrs.define
-class ElasticsearchClient(BaseCoreClient):
+class ElasticsearchClient(AsyncBaseCoreClient):
     credentials = attrs.field(default=None)
     timeout = attrs.field(
         default=20, validator=[validators.instance_of(int), validators.ge(0)]
     )
     dialect = attrs.field(default="ifremer", validator=validators.in_(dialects))
+    use_socks_proxy = attrs.field(default=False)
 
     client = attrs.field(default=None, init=False)
 
@@ -28,18 +28,24 @@ class ElasticsearchClient(BaseCoreClient):
         if self.credentials is None:
             raise ValueError("need credentials to connect to the database")
 
-        self.session = connections.create_connection(
-            hosts=[self.credentials],
-            timeout=self.timeout,
-            connection_class=RequestsHttpConnection,
-        )
+        options = {
+            "hosts": [self.credentials],
+            "timeout": self.timeout,
+        }
+        if self.use_socks_proxy:
+            from .connection import ProxyAIOHttpConnection
+
+            options["connection_class"] = ProxyAIOHttpConnection
+
+        self.session = AsyncElasticsearch(**options)
+
         dialect_class = dialects.get(self.dialect)
         self.client = dialect_class(self.session)
 
-    def close(self):
+    async def close(self):
         self.client = None
 
-        self.session.close()
+        await self.session.close()
         self.session = None
 
     def all_collections(self, **kwargs) -> stac_types.Collections:

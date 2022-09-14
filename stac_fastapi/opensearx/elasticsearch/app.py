@@ -5,10 +5,19 @@ from stac_fastapi.types import config
 from .core import ElasticsearchClient
 
 
-def create_api(*, credentials, host="127.0.0.1", port=9588, dialect="ifremer"):
+def create_api(
+    *,
+    credentials,
+    host="127.0.0.1",
+    port=9588,
+    dialect="ifremer",
+    use_socks_proxy=False
+):
     settings = config.ApiSettings(app_host=host, app_port=port)
 
-    client = ElasticsearchClient(credentials=credentials, dialect=dialect)
+    client = ElasticsearchClient(
+        credentials=credentials, dialect=dialect, use_socks_proxy=use_socks_proxy
+    )
     extensions = [
         PaginationExtension(),
     ]
@@ -20,11 +29,11 @@ def create_api(*, credentials, host="127.0.0.1", port=9588, dialect="ifremer"):
     )
 
     @api.app.on_event("shutdown")
-    def app_shutdown():
+    async def app_shutdown():
         """shutdown the client to close the session
 
         If there's a way to have `StacApi` do that for us it would be better to put there.
         """
-        client.close()
+        await client.close()
 
     return api

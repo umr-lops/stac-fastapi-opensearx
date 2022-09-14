@@ -13,6 +13,16 @@ parser.add_argument(
     required=True,
 )
 parser.add_argument(
+    "--use-socks-proxy",
+    action="store_true",
+    help=" ".join(
+        [
+            "use a socks proxy to connect to the database.",
+            "Read from the https_proxy and http_proxy env variables",
+        ]
+    ),
+)
+parser.add_argument(
     "--dialect",
     choices=sorted(dialects),
     default="ifremer",
@@ -33,7 +43,11 @@ else:
     credentials = credentials.read_text()
 
 api = create_api(
-    credentials=credentials, dialect=args.dialect, host=args.host, port=args.port
+    credentials=credentials,
+    dialect=args.dialect,
+    host=args.host,
+    port=args.port,
+    use_socks_proxy=args.use_socks_proxy,
 )
 # app is used by uvicorn
 app = api.app
