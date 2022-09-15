@@ -103,13 +103,15 @@ class Ifremer:
         query = {
             "bool": {
                 "filter": list(
-                    itertools.chain(
-                        self.item_query(search_request.ids),
-                        self.temporal_query(search_request.datetime),
-                        self.spatial_query(
+                    filter_
+                    for filter_ in itertools.chain(
+                        self.item_id_filter(search_request.ids),
+                        self.temporal_filter(search_request.datetime),
+                        self.spatial_filter(
                             search_request.bbox, search_request.intersects
                         ),
                     )
+                    if filter_ is not None
                 ),
             }
         }
