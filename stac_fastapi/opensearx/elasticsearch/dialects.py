@@ -18,6 +18,18 @@ def bbox_from_geometry(geometry):
     return geom.geom.bounds
 
 
+def bbox_to_geometry(bbox):
+    from odc.geo import BoundingBox
+
+    polygon = BoundingBox(*bbox, crs="epsg:4326").polygon
+
+    geojson = polygon.geojson()
+    if geojson["type"] == "Feature":
+        geojson = geojson["geometry"]
+
+    return geojson
+
+
 @attrs.define
 class Ifremer:
     session = attrs.field()
@@ -25,6 +37,7 @@ class Ifremer:
     prefix = "isi_cersat_naiad_"
 
     temporal_field_names = ("time_coverage_start", "time_coverage_end")
+    spatial_field_name = "geometry"
 
     def clean_index_name(self, name):
         return name.removeprefix(self.prefix)
@@ -68,8 +81,30 @@ class Ifremer:
         if end != "..":
             yield {"range": {self.temporal_field_names[1]: {"lte": end}}}
 
-    def spatial_query(self, bbox, intersects):
-        return []
+    def spatial_filter(self, bbox, intersects):
+        if bbox:
+            yield {
+                "geo_shape": {
+                    self.spatial_field_name: {
+                        "shape": bbox_to_geometry(bbox),
+                        "relation": "within",
+                    }
+                }
+            }
+        elif intersects:
+            yield {
+                "geo_shape": {
+                    self.spatial_field_name: {
+                        "shape": {
+                            "type": intersects.type,
+                            "coordinates": intersects.coordinates,
+                        },
+                        "relation": "intersects",
+                    }
+                }
+            }
+        else:
+            yield None
 
     def item_id_filter(self, ids):
         if not ids:
