@@ -51,7 +51,7 @@ class Ifremer:
         return []
 
     def item_query(self, ids):
-        return []
+        yield {"ids": {"values": ids}}
 
     async def collections(self) -> stac_types.Collections:
         """
