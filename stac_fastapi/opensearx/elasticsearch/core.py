@@ -48,21 +48,25 @@ class ElasticsearchClient(AsyncBaseCoreClient):
         await self.session.close()
         self.session = None
 
-    def all_collections(self, **kwargs) -> stac_types.Collections:
-        collections = self.client.collections()
+    async def all_collections(self, **kwargs) -> stac_types.Collections:
+        collections = await self.client.collections()
         return stac_types.Collections(
             collections=[col.to_dict() for col in collections],
             links=[],
         )
 
-    def get_collection(self, collection_id: str, **kwargs) -> stac_types.Collection:
-        collection = self.client.collection(collection_id)
+    async def get_collection(
+        self, collection_id: str, **kwargs
+    ) -> stac_types.Collection:
+        collection = await self.client.collection(collection_id)
         return collection.to_dict()
 
-    def get_item(self, item_id: str, collection_id: str, **kwargs) -> stac_types.Item:
+    async def get_item(
+        self, item_id: str, collection_id: str, **kwargs
+    ) -> stac_types.Item:
         pass
 
-    def item_collection(
+    async def item_collection(
         self, collection_id: str, limit: int = 10, token: str = None, **kwargs
     ) -> stac_types.ItemCollection:
         pass

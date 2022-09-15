@@ -44,7 +44,7 @@ class Ifremer:
 
         return collection
 
-    def collections(self) -> stac_types.Collections:
+    async def collections(self) -> stac_types.Collections:
         """
         collections will be stored in index information in the future, but at the moment,
         there's only the names.
@@ -53,16 +53,16 @@ class Ifremer:
         values for everything else.
         """
         # collections are stored in indices
-        indices = self.session.cat.indices(format="json")
+        indices = await self.session.cat.indices(format="json")
         return [self.index_to_collection(index) for index in indices]
 
-    def collection(self, name) -> stac_types.Collection:
+    async def collection(self, name) -> stac_types.Collection:
         """get a specific collection by name
 
         Since there's no way to get just a the info of a single index, we can just
         delegate to `collections`.
         """
-        collections = {col.id: col for col in self.collections()}
+        collections = {col.id: col for col in await self.collections()}
         col = collections.get(name)
         if name is None:
             raise errors.NotFoundError(f"could not find collection {name!r}")
