@@ -54,8 +54,11 @@ class Ifremer:
     def spatial_query(self, bbox, intersects):
         return []
 
-    def item_query(self, ids):
-        yield {"ids": {"values": ids}}
+    def item_id_filter(self, ids):
+        if not ids:
+            yield None
+        else:
+            yield {"ids": {"values": ids}}
 
     async def collections(self) -> stac_types.Collections:
         """
