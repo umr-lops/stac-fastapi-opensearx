@@ -18,16 +18,14 @@ def bbox_from_geometry(geometry):
     return geom.geom.bounds
 
 
-def bbox_to_geometry(bbox):
-    from odc.geo import BoundingBox
+def bbox_to_envelope_geometry(bbox):
+    x0, y0, x1, y1 = bbox
 
-    polygon = BoundingBox(*bbox, crs="epsg:4326").polygon
+    top_left = [x0, y1]
+    bottom_right = [x1, y0]
+    envelope = [top_left, bottom_right]
 
-    geojson = polygon.geojson()
-    if geojson["type"] == "Feature":
-        geojson = geojson["geometry"]
-
-    return geojson
+    return {"type": "envelope", "coordinates": envelope}
 
 
 @attrs.define
@@ -86,7 +84,7 @@ class Ifremer:
             yield {
                 "geo_shape": {
                     self.spatial_field_name: {
-                        "shape": bbox_to_geometry(bbox),
+                        "shape": bbox_to_envelope_geometry(bbox),
                         "relation": "within",
                     }
                 }
