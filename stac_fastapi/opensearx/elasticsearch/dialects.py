@@ -79,16 +79,18 @@ class Ifremer:
         return col
 
     def hit_to_item(self, hit):
-        fname = hit.meta.id
+        fname = hit["_id"]
+
+        source = hit["_source"]
 
         return pystac.Item(
             id=fname,
-            geometry=hit.geometry.to_dict(),
+            geometry=source["geometry"],
             datetime=None,
-            bbox=bbox_from_geometry(hit.geometry.to_dict()),
+            bbox=bbox_from_geometry(source["geometry"]),
             properties={
-                "start_datetime": hit.time_coverage_start,
-                "end_datetime": hit.time_coverage_end,
+                "start_datetime": source["time_coverage_start"],
+                "end_datetime": source["time_coverage_end"],
             },
         )
 
@@ -132,10 +134,7 @@ class Ifremer:
         hits = result["hits"]
         n_total = hits["total"]["value"]
 
-        return 0, []
-
-        items = [self.hit_to_item(hit) for hit in result.hits]
-        n_total = result.hits.total["value"]
+        items = [self.hit_to_item(hit) for hit in hits["hits"]]
 
         return n_total, items
 
