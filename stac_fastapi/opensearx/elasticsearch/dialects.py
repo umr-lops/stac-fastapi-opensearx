@@ -151,7 +151,7 @@ class Ifremer:
             },
         )
 
-    async def search(self, search_request, page):
+    def search_query(self, search_request):
         if search_request.collections:
             indexes = [self.prefix + name for name in search_request.collections]
         else:
@@ -176,6 +176,11 @@ class Ifremer:
             # get all results
             query = None
 
+        return indexes, query
+
+    async def search(self, search_request, page):
+        indexes, query = self.search_query(search_request)
+
         if search_request.limit:
             from_ = (page - 1) * search_request.limit
             size = search_request.limit
@@ -190,9 +195,9 @@ class Ifremer:
             size=size,
             track_total_hits=True,
         )
+
         hits = result["hits"]
         n_total = hits["total"]["value"]
-
         items = [self.hit_to_item(hit) for hit in hits["hits"]]
 
         return n_total, items
