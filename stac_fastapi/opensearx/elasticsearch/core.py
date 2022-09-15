@@ -71,7 +71,7 @@ class ElasticsearchClient(AsyncBaseCoreClient):
     ) -> stac_types.ItemCollection:
         pass
 
-    def get_search(
+    async def get_search(
         self,
         collections: Optional[List[str]] = None,
         ids: Optional[List[str]] = None,
@@ -99,7 +99,7 @@ class ElasticsearchClient(AsyncBaseCoreClient):
         clean = {key: value for key, value in options.items() if value is not None}
         search_request = BaseSearchPostRequest(**clean)
 
-        n_total, items = self.client.search(search_request, page=current_page)
+        n_total, items = await self.client.search(search_request, page=current_page)
 
         links = pagination.generate_get_pagination_links(
             request,
@@ -113,7 +113,7 @@ class ElasticsearchClient(AsyncBaseCoreClient):
             links=links,
         )
 
-    def post_search(
+    async def post_search(
         self, search_request: BaseSearchPostRequest, **kwargs
     ) -> stac_types.ItemCollection:
         request = kwargs["request"]
@@ -121,8 +121,9 @@ class ElasticsearchClient(AsyncBaseCoreClient):
         # TODO: need to use `request.json()`, which is async
         # In other words, we would need to switch the core client to async
         # but: elasticsearch_dsl does not support async, yet.
-        current_page = request.query_params.get("page", 1)
-        n_total, items = self.client.search(search_request, page=current_page)
+        params = await request.json()
+        current_page = params.get("page", 1)
+        n_total, items = await self.client.search(search_request, page=current_page)
 
         # links = pagination.generate_post_pagination_links(
         #     request,

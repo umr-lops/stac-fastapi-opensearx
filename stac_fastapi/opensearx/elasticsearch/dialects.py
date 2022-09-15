@@ -1,8 +1,8 @@
+import itertools
 from datetime import datetime
 
 import attrs
 import pystac
-from elasticsearch_dsl import Search
 from stac_fastapi.types import errors
 from stac_fastapi.types import stac as stac_types
 
@@ -44,6 +44,15 @@ class Ifremer:
 
         return collection
 
+    def temporal_query(self, range_):
+        return []
+
+    def spatial_query(self, bbox, intersects):
+        return []
+
+    def item_query(self, ids):
+        return []
+
     async def collections(self) -> stac_types.Collections:
         """
         collections will be stored in index information in the future, but at the moment,
@@ -83,45 +92,47 @@ class Ifremer:
             },
         )
 
-    def search(self, search_request, page):
+    async def search(self, search_request, page):
         if search_request.collections:
             indexes = [self.prefix + name for name in search_request.collections]
         else:
             indexes = "_all"
 
-        s = Search(index=indexes).using(self.session).extra(track_total_hits=True)
-
-        # temporal extent
-        if search_request.datetime:
-            # Items have a date range, and the query can have these forms:
-            # - a single datetime: in that case find any items that contain that datetime
-            # - a interval: find any items that are entirely contained within that item
-            def split_datetime(datetime):
-                if "/" not in datetime:
-                    # searching for exactly this datetime
-                    return datetime, datetime
-
-                return datetime.split("/")
-
-            lower_bound, upper_bound = split_datetime(search_request.datetime)
-
-            if lower_bound != "..":
-                s = s.filter("range", time_coverage_start={"gte": lower_bound})
-
-            if upper_bound != "..":
-                s = s.filter("range", time_coverage_end={"lte": upper_bound})
-
-        # spatial extent
-        # if search_request.bbox:
-        #     pass
+        query = {
+            "bool": {
+                "filter": list(
+                    itertools.chain(
+                        self.item_query(search_request.ids),
+                        self.temporal_query(search_request.datetime),
+                        self.spatial_query(
+                            search_request.bbox, search_request.intersects
+                        ),
+                    )
+                ),
+            }
+        }
+        if not query["bool"]["filter"]:
+            # get all results
+            query = None
 
         if search_request.limit:
-            lower = (page - 1) * search_request.limit
-            upper = page * search_request.limit
+            from_ = (page - 1) * search_request.limit
+            size = search_request.limit
+        else:
+            from_ = None
+            size = None
 
-            s = s[lower:upper]
+        result = await self.session.search(
+            index=indexes,
+            query=query,
+            from_=from_,
+            size=size,
+            track_total_hits=True,
+        )
+        hits = result["hits"]
+        n_total = hits["total"]["value"]
 
-        result = s.execute()
+        return 0, []
 
         items = [self.hit_to_item(hit) for hit in result.hits]
         n_total = result.hits.total["value"]
