@@ -7,6 +7,10 @@ from stac_fastapi.types import errors
 from stac_fastapi.types import stac as stac_types
 
 
+def drop_none(iterable):
+    yield from (item for item in iterable if item is not None)
+
+
 def bbox_from_geometry(geometry):
     from odc.geo import Geometry
 
@@ -103,15 +107,15 @@ class Ifremer:
         query = {
             "bool": {
                 "filter": list(
-                    filter_
-                    for filter_ in itertools.chain(
-                        self.item_id_filter(search_request.ids),
-                        self.temporal_filter(search_request.datetime),
-                        self.spatial_filter(
-                            search_request.bbox, search_request.intersects
-                        ),
+                    drop_none(
+                        itertools.chain(
+                            self.item_id_filter(search_request.ids),
+                            self.temporal_filter(search_request.datetime),
+                            self.spatial_filter(
+                                search_request.bbox, search_request.intersects
+                            ),
+                        )
                     )
-                    if filter_ is not None
                 ),
             }
         }
