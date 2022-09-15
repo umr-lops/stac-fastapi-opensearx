@@ -24,6 +24,8 @@ class Ifremer:
 
     prefix = "isi_cersat_naiad_"
 
+    temporal_field_names = ("time_coverage_start", "time_coverage_end")
+
     def clean_index_name(self, name):
         return name.removeprefix(self.prefix)
 
@@ -48,8 +50,23 @@ class Ifremer:
 
         return collection
 
-    def temporal_query(self, range_):
-        return []
+    def temporal_filter(self, range_):
+        if not range_:
+            yield None
+
+        # Items have a date range, and the query can have these forms:
+        # - a single datetime: in that case find any items that contain that datetime
+        # - a interval: find any items that are entirely contained within that item
+        if "/" in range_:
+            start, end = range_.split("/")
+        else:
+            start, end = range_, range_
+
+        if start != "..":
+            yield {"range": {self.temporal_field_names[0]: {"gte": start}}}
+
+        if end != "..":
+            yield {"range": {self.temporal_field_names[1]: {"lte": end}}}
 
     def spatial_query(self, bbox, intersects):
         return []
