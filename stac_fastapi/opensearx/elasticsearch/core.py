@@ -118,21 +118,21 @@ class ElasticsearchClient(AsyncBaseCoreClient):
     ) -> stac_types.ItemCollection:
         request = kwargs["request"]
 
-        # TODO: need to use `request.json()`, which is async
-        # In other words, we would need to switch the core client to async
-        # but: elasticsearch_dsl does not support async, yet.
         params = await request.json()
+
         current_page = params.get("page", 1)
+
+        # TODO: figure out how to paginate past 10000 items
         n_total, items = await self.client.search(search_request, page=current_page)
 
-        # links = pagination.generate_post_pagination_links(
-        #     request,
-        #     page=current_page,
-        #     n_results=n_total,
-        #     limit=search_request.limit,
-        # )
+        links = pagination.generate_post_pagination_links(
+            request,
+            page=current_page,
+            n_results=n_total,
+            limit=search_request.limit,
+        )
 
         return stac_types.ItemCollection(
             features=[item.to_dict() for item in items],
-            links=[],
+            links=links,
         )
