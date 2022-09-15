@@ -52,7 +52,7 @@ class Ifremer:
 
     def temporal_filter(self, range_):
         if not range_:
-            yield None
+            return []
 
         # Items have a date range, and the query can have these forms:
         # - a single datetime: in that case find any items that contain that datetime
