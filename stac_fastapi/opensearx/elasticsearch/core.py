@@ -8,7 +8,7 @@ from stac_fastapi.types import stac as stac_types
 from stac_fastapi.types.core import AsyncBaseCoreClient, NumType
 from stac_fastapi.types.search import BaseSearchPostRequest
 
-from .. import pagination
+from . import pagination
 from .dialects import dialects
 
 
@@ -87,7 +87,7 @@ class ElasticsearchClient(AsyncBaseCoreClient):
         request = kwargs["request"]
         params = request.query_params
 
-        current_page = int(params.get("page", "1"))
+        token = params.get("token")
 
         options = {
             "collections": collections,
@@ -99,13 +99,11 @@ class ElasticsearchClient(AsyncBaseCoreClient):
         clean = {key: value for key, value in options.items() if value is not None}
         search_request = BaseSearchPostRequest(**clean)
 
-        n_total, items = await self.client.search(search_request, page=current_page)
+        new_token, items = await self.client.search(search_request, token=token)
 
         links = pagination.generate_get_pagination_links(
-            request,
-            page=current_page,
-            n_results=n_total,
-            limit=search_request.limit,
+            request.url,
+            token=new_token,
         )
 
         return stac_types.ItemCollection(
@@ -120,16 +118,13 @@ class ElasticsearchClient(AsyncBaseCoreClient):
 
         params = await request.json()
 
-        current_page = params.get("page", 1)
+        token = params.get("token")
 
-        # TODO: figure out how to paginate past 10000 items
-        n_total, items = await self.client.search(search_request, page=current_page)
+        new_token, items = await self.client.search(search_request, token=token)
 
         links = pagination.generate_post_pagination_links(
-            request,
-            page=current_page,
-            n_results=n_total,
-            limit=search_request.limit,
+            request.url,
+            token=new_token,
         )
 
         return stac_types.ItemCollection(

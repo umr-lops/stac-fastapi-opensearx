@@ -1,3 +1,4 @@
+import base64
 import itertools
 from datetime import datetime
 
@@ -28,6 +29,19 @@ def bbox_to_envelope_geometry(bbox):
     return {"type": "envelope", "coordinates": envelope}
 
 
+def decode_search_after(token):
+    if token is None:
+        return None
+
+    return base64.urlsafe_b64decode(token.encode()).decode().split(",")
+
+
+def encode_search_after(search_after):
+    joined = ",".join(str(_) for _ in search_after)
+
+    return base64.urlsafe_b64encode(joined.encode()).decode()
+
+
 @attrs.define
 class Ifremer:
     session = attrs.field()
@@ -36,6 +50,7 @@ class Ifremer:
 
     temporal_field_names = ("time_coverage_start", "time_coverage_end")
     spatial_field_name = "geometry"
+    sort = list(temporal_field_names) + ["_id"]
 
     def clean_index_name(self, name):
         return name.removeprefix(self.prefix)
@@ -178,29 +193,28 @@ class Ifremer:
 
         return indexes, query
 
-    async def search(self, search_request, page):
+    async def search(self, search_request, token):
+        # TODO: use `elasticsearch_dsl`, then extract the query using `.to_dict()`
         indexes, query = self.search_query(search_request)
 
-        if search_request.limit:
-            from_ = (page - 1) * search_request.limit
-            size = search_request.limit
-        else:
-            from_ = None
-            size = None
+        search_after = decode_search_after(token)
 
         result = await self.session.search(
             index=indexes,
             query=query,
-            from_=from_,
-            size=size,
+            size=search_request.limit,
             track_total_hits=True,
+            sort=self.sort,
+            search_after=search_after,
         )
 
         hits = result["hits"]
-        n_total = hits["total"]["value"]
+        all_hits = hits["hits"]
+
+        new_token = encode_search_after(all_hits[-1]["sort"]) if all_hits else None
         items = [self.hit_to_item(hit) for hit in hits["hits"]]
 
-        return n_total, items
+        return new_token, items
 
 
 dialects = {
