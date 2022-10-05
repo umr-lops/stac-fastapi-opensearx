@@ -3,6 +3,8 @@ import itertools
 from datetime import datetime
 
 import attrs
+import dateutil
+import more_itertools
 import pystac
 from stac_fastapi.types import errors
 from stac_fastapi.types import stac as stac_types
@@ -43,8 +45,16 @@ def encode_search_after(search_after):
 
 
 @attrs.define
+class SceneInfo:
+    filename = attrs.field()
+    year = attrs.field()
+    day_of_year = attrs.field()
+
+
+@attrs.define
 class Ifremer:
     session = attrs.field()
+    filepatterns = attrs.field(factory=dict)
 
     prefix = "isi_cersat_naiad_"
 
@@ -150,13 +160,59 @@ class Ifremer:
 
         return col
 
+    def fname_to_assets(self, collection, scene_info):
+        comparisons = {
+            "contains": lambda s: s in scene_info.filename,
+        }
+
+        def check_condition(condition):
+            if not condition:
+                return True
+
+            return all(comparisons[comp](value) for comp, value in condition.items())
+
+        def fill_link(pattern):
+            link = pattern.copy()
+            file_pattern = link.pop("pattern")
+            link["href"] = file_pattern.format(scene=scene_info)
+
+            return link
+
+        patterns = self.filepatterns.get(collection)
+        if not patterns:
+            return {}
+
+        link_patterns = [
+            pattern["links"]
+            for pattern in patterns
+            if check_condition(pattern.get("condition"))
+        ]
+        if len(link_patterns) != 1:
+            raise ValueError(
+                f"patterns do not match filename exactly once: {scene_info.filename}"
+            )
+
+        links = [fill_link(link) for link in more_itertools.one(link_patterns)]
+        assets = {link["name"]: pystac.Asset(href=link["href"]) for link in links}
+        return assets
+
     def hit_to_item(self, hit):
-        fname = hit["_id"]
+        collection = self.clean_index_name(hit["_index"])
+        id_ = hit["_id"]
 
         source = hit["_source"]
+        fname = source["granule"]
+
+        timestamp = dateutil.parser.parse(source["time_coverage_start"])
+
+        scene_info = SceneInfo(
+            fname, timestamp.strftime("%j"), timestamp.strftime("%Y")
+        )
+
+        assets = self.fname_to_assets(collection, scene_info)
 
         return pystac.Item(
-            id=fname,
+            id=id_,
             geometry=source["geometry"],
             datetime=None,
             bbox=bbox_from_geometry(source["geometry"]),
@@ -164,6 +220,7 @@ class Ifremer:
                 "start_datetime": source["time_coverage_start"],
                 "end_datetime": source["time_coverage_end"],
             },
+            assets=assets,
         )
 
     def search_query(self, search_request):

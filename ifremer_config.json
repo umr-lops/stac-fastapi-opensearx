@@ -1,0 +1,50 @@
+{
+  "filepatterns": {
+    "jason2_igdr": [
+      {
+        "condition": {},
+        "links": [
+          {
+            "name": "local",
+            "pattern": "/home/datawork-cersat-public/provider/aviso/satellite/l2/jason-2/poseidon-3/igdr/data/date/{scene.year}/{scene.day_of_year}/{scene.filename}"
+          }
+        ]
+      }
+    ],
+    "jason3_igdr": [
+      {
+        "condition": {
+          "contains": "JA3_IPN_2PdP"
+        },
+        "links": [
+          {
+            "name": "local",
+            "pattern": "/home/datawork-cersat-public/provider/aviso/satellite/l2/jason-3/poseidon-3b/igdr/version_d/data/date/{scene.year}/{scene.day_of_year}/{scene.filename}"
+          }
+        ]
+      },
+      {
+        "condition": {
+          "contains": "JA3_IPN_2PfP"
+        },
+        "links": [
+          {
+            "name": "local",
+            "pattern": "/home/datawork-cersat-public/provider/aviso/satellite/l2/jason-3/poseidon-3b/igdr/version_f/data/date/{scene.year}/{scene.day_of_year}/{scene.filename}"
+          }
+        ]
+      },
+      {
+        "condition": {
+          "contains": "JA3_IPN_2PTP"
+        },
+        "links": [
+          {
+            "name": "local",
+            "pattern": "/home/datawork-cersat-public/provider/aviso/satellite/l2/jason-3/poseidon-3b/igdr/version_t/data/date/{scene.year}/{scene.day_of_year}/{scene.filename}"
+          }
+        ]
+      }
+    ]
+  }
+}
