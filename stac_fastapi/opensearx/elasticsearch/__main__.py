@@ -48,19 +48,10 @@ if args.credentials.suffix == ".json":
 else:
     credentials = credentials.read_text()
 
-if args.dialect_config is None:
-    dialect_config = {}
-else:
-    if not args.dialect_config.exists():
-        raise ValueError(f"path does not exist: {args.dialect_config}")
-    elif not args.dialect_config.is_file():
-        raise ValueError(f"path is not a file: {args.dialect_config}")
-    dialect_config = json.loads(args.dialect_config.read_text())
-
 api = create_api(
     credentials=credentials,
     dialect=args.dialect,
-    dialect_config=dialect_config,
+    dialect_config_path=args.dialect_config,
     host=args.host,
     port=args.port,
     use_socks_proxy=args.use_socks_proxy,

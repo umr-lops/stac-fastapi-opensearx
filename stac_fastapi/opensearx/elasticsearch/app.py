@@ -11,13 +11,16 @@ def create_api(
     host="127.0.0.1",
     port=9588,
     dialect="ifremer",
-    dialect_config={},
+    dialect_config_path=None,
     use_socks_proxy=False,
 ):
     settings = config.ApiSettings(app_host=host, app_port=port)
 
     client = ElasticsearchClient(
-        credentials=credentials, dialect=dialect, use_socks_proxy=use_socks_proxy
+        credentials=credentials,
+        dialect=dialect,
+        use_socks_proxy=use_socks_proxy,
+        dialect_config_path=dialect_config_path,
     )
     extensions = [
         PaginationExtension(),

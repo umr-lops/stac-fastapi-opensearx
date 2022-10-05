@@ -20,7 +20,16 @@ class ElasticsearchClient(AsyncBaseCoreClient):
         default=20, validator=[validators.instance_of(int), validators.ge(0)]
     )
     dialect = attrs.field(default="ifremer", validator=validators.in_(dialects))
-    dialect_config = attrs.field(factory=dict)
+    dialect_config_path = attrs.field(default=None)
+
+    @dialect_config_path.validator
+    def _check_dialect_config_path(self, attribute, value):
+        if value is None:
+            return
+
+        if not value.is_file():
+            raise ValueError(f"{value} does not exist or is not a file.")
+
     use_socks_proxy = attrs.field(default=False)
 
     client = attrs.field(default=None, init=False)
@@ -41,7 +50,13 @@ class ElasticsearchClient(AsyncBaseCoreClient):
         self.session = AsyncElasticsearch(**options)
 
         dialect_class = dialects.get(self.dialect)
-        self.client = dialect_class(self.session, **self.dialect_config)
+        if self.dialect_config_path is not None:
+            import json
+
+            dialect_config = json.loads(self.dialect_config_path.read_text())
+        else:
+            dialect_config = {}
+        self.client = dialect_class(self.session, **dialect_config)
 
     async def close(self):
         self.client = None
