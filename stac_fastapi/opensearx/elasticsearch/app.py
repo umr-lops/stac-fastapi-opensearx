@@ -11,7 +11,8 @@ def create_api(
     host="127.0.0.1",
     port=9588,
     dialect="ifremer",
-    use_socks_proxy=False
+    dialect_config={},
+    use_socks_proxy=False,
 ):
     settings = config.ApiSettings(app_host=host, app_port=port)
 

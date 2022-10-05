@@ -20,6 +20,7 @@ class ElasticsearchClient(AsyncBaseCoreClient):
         default=20, validator=[validators.instance_of(int), validators.ge(0)]
     )
     dialect = attrs.field(default="ifremer", validator=validators.in_(dialects))
+    dialect_config = attrs.field(factory=dict)
     use_socks_proxy = attrs.field(default=False)
 
     client = attrs.field(default=None, init=False)
@@ -40,7 +41,7 @@ class ElasticsearchClient(AsyncBaseCoreClient):
         self.session = AsyncElasticsearch(**options)
 
         dialect_class = dialects.get(self.dialect)
-        self.client = dialect_class(self.session)
+        self.client = dialect_class(self.session, **self.dialect_config)
 
     async def close(self):
         self.client = None
