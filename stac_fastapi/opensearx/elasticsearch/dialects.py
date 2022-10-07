@@ -201,7 +201,7 @@ class Ifremer:
         id_ = hit["_id"]
 
         source = hit["_source"]
-        fname = source["granule"]
+        fname = source.get("granule", id_)
 
         timestamp = dateutil.parser.parse(source["time_coverage_start"])
 
