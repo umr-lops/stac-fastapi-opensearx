@@ -206,7 +206,9 @@ class Ifremer:
         timestamp = dateutil.parser.parse(source["time_coverage_start"])
 
         scene_info = SceneInfo(
-            fname, timestamp.strftime("%j"), timestamp.strftime("%Y")
+            filename=fname,
+            year=timestamp.strftime("%Y"),
+            day_of_year=timestamp.strftime("%j"),
         )
 
         assets = self.fname_to_assets(collection, scene_info)
