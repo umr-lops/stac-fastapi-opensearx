@@ -1,5 +1,62 @@
 {
   "filepatterns": {
+    "avhrr_sst_metop_a-osisaf-l2p-v1.0": [
+      {
+        "condition": {},
+        "links": [
+          {
+            "name": "local",
+            "pattern": "/home/ref-osisaf-public/data/sst/l2p/global/avhrr_metop_a/{scene.year}/{scene.day_of_year}/{scene.filename}"
+          },
+          {
+            "name": "ftp",
+            "pattern": "ftp://eftp1.ifremer.fr/cersat-rt/project/osi-saf/data/sst/l2p/global/avhrr_metop_a/{scene.year}/{scene.day_of_year}/{scene.filename}"
+          },
+          {
+            "name": "https",
+            "pattern": "https://osi-saf.ifremer.fr/sst/l2p/global/avhrr_metop_a/{scene.year}/{scene.day_of_year}/{scene.filename}"
+          }
+        ]
+      }
+    ],
+    "avhrr_sst_metop_b-osisaf-l2p-v1.0": [
+      {
+        "condition": {},
+        "links": [
+          {
+            "name": "local",
+            "pattern": "/home/ref-osisaf-public/data/sst/l2p/global/avhrr_metop_b/{scene.year}/{scene.day_of_year}/{scene.filename}"
+          },
+          {
+            "name": "ftp",
+            "pattern": "ftp://eftp1.ifremer.fr/cersat-rt/project/osi-saf/data/sst/l2p/global/avhrr_metop_b/{scene.year}/{scene.day_of_year}/{scene.filename}"
+          },
+          {
+            "name": "https",
+            "pattern": "https://osi-saf.ifremer.fr/sst/l2p/global/avhrr_metop_b/{scene.year}/{scene.day_of_year}/{scene.filename}"
+          }
+        ]
+      }
+    ],
+    "avhrr_sst_metop_c-osisaf-l2p-v1.0": [
+      {
+        "condition": {},
+        "links": [
+          {
+            "name": "local",
+            "pattern": "/home/ref-osisaf-public/data/sst/l2p/global/avhrr_metop_c/{scene.year}/{scene.day_of_year}/{scene.filename}"
+          },
+          {
+            "name": "ftp",
+            "pattern": "ftp://eftp1.ifremer.fr/cersat-rt/project/osi-saf/data/sst/l2p/global/avhrr_metop_c/{scene.year}/{scene.day_of_year}/{scene.filename}"
+          },
+          {
+            "name": "https",
+            "pattern": "https://osi-saf.ifremer.fr/sst/l2p/global/avhrr_metop_c/{scene.year}/{scene.day_of_year}/{scene.filename}"
+          }
+        ]
+      }
+    ],
     "jason2_igdr": [
       {
         "condition": {},
