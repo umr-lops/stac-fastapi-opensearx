@@ -20,14 +20,13 @@ def get_link(rel, url, page, total_pages, limit):
         new_page = page
     elif rel == "next":
         new_page = page + 1
-        if new_page > total_pages:
-            return {}
     elif rel == "prev":
         new_page = page - 1
-        if new_page < 1:
-            return {}
     else:
         raise ValueError(f"unknown relation: {rel}")
+
+    if new_page < 1 or new_page > total_pages:
+        return {}
 
     params = concat_params(orig_params, {"page": new_page})
     new_url = url.replace(query=str(params))
@@ -64,50 +63,29 @@ def post_url(obj):
 
 
 def post_link(rel, url, page, total_pages, limit):
+
     if rel == "self":
         new_page = page
-        return {
-            "rel": "self",
-            "href": url,
-            "method": "POST",
-            "body": {
-                "page": new_page,
-                "limit": limit,
-            },
-            "merge": True,
-        }
     elif rel == "next":
         new_page = page + 1
-        if new_page > total_pages:
-            return {}
-
-        return {
-            "rel": "next",
-            "href": url,
-            "method": "POST",
-            "body": {
-                "page": new_page,
-                "limit": limit,
-            },
-            "merge": True,
-        }
     elif rel == "prev":
         new_page = page - 1
-        if new_page < 1:
-            return {}
-
-        return {
-            "rel": "prev",
-            "href": url,
-            "method": "POST",
-            "body": {
-                "page": new_page,
-                "limit": limit,
-            },
-            "merge": True,
-        }
     else:
         raise ValueError(f"unknown relation: {rel}")
+
+    if new_page < 1 or new_page > total_pages:
+        return {}
+
+    return {
+        "rel": rel,
+        "href": url,
+        "method": "POST",
+        "body": {
+            "page": new_page,
+            "limit": limit,
+        },
+        "merge": True,
+    }
 
 
 def generate_post_pagination_links(request, *, page, n_results, limit):

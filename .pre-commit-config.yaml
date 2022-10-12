@@ -5,6 +5,10 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-yaml
+      - id: check-json
+      - id: check-toml
+      - id: pretty-format-json
+        args: [--autofix, --no-ensure-ascii, --no-sort-keys]
 
   - repo: https://github.com/pycqa/isort
     rev: 5.10.1
@@ -18,11 +22,11 @@ repos:
       - id: black-jupyter
 
   - repo: https://github.com/keewis/blackdoc
-    rev: v0.3.5
+    rev: v0.3.6
     hooks:
       - id: blackdoc
 
   - repo: https://github.com/pycqa/flake8
-    rev: 4.0.1
+    rev: 5.0.4
     hooks:
       - id: flake8
