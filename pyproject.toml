@@ -9,6 +9,7 @@ dependencies = [
     "starlette",
     "aiohttp",
     "more-itertools",
+    "attrs",
 ]
 dynamic = ["version"]
 
