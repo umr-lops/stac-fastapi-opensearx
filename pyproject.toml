@@ -20,6 +20,9 @@ dynamic = ["version"]
 elasticsearch = [
     "elasticsearch<8"
 ]
+webapi = [
+    "feedparser",
+]
 
 [build-system]
 requires = ["setuptools", "setuptools-scm"]
