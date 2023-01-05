@@ -8,6 +8,7 @@ dependencies = [
     "stac-fastapi.extensions",
     "starlette",
     "aiohttp",
+    "more-itertools",
 ]
 dynamic = ["version"]
 
