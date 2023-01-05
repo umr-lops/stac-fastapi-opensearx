@@ -11,6 +11,11 @@ dependencies = [
 ]
 dynamic = ["version"]
 
+[project.optional-dependencies]
+elasticsearch = [
+    "elasticsearch<8"
+]
+
 [build-system]
 requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
