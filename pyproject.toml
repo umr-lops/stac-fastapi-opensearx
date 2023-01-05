@@ -10,6 +10,9 @@ dependencies = [
     "aiohttp",
     "more-itertools",
     "attrs",
+    "pystac",
+    "uvicorn",
+    "rich",
 ]
 dynamic = ["version"]
 
