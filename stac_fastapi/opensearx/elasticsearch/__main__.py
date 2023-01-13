@@ -1,6 +1,8 @@
 import argparse
 import json
+import os
 import pathlib
+from urllib.parse import urlsplit
 
 from .app import create_api
 from .dialects import dialects
@@ -10,7 +12,7 @@ parser.add_argument(
     "--credentials",
     type=pathlib.Path,
     help="path to the credentials for the elasticsearch database",
-    required=True,
+    required=False,
 )
 parser.add_argument(
     "--use-socks-proxy",
@@ -43,10 +45,35 @@ parser.add_argument(
 parser.add_argument("--log-level", default="info", help="verbosity of the server")
 
 args = parser.parse_args()
-if args.credentials.suffix == ".json":
-    credentials = json.loads(args.credentials.read_text())
+if args.credentials:
+    if args.credentials.suffix == ".json":
+        credentials = json.loads(args.credentials.read_text())
+    else:
+        credentials = credentials.read_text()
 else:
-    credentials = credentials.read_text()
+    # from environment variables
+    url = os.environ.get("OPENSEARX_BACKEND_URL")
+    user = os.environ.get("OPENSEARX_BACKEND_USER")
+    passwd = os.environ.get("OPENSEARX_BACKEND_PASSWORD")
+
+    if url is None:
+        raise ValueError(
+            "cannot find the backend url. Pass either --credentials or set OPENSEARX_BACKEND_URL"
+        )
+
+    parts = urlsplit(url)
+
+    if user is None or passwd is None:
+        auth = None
+    else:
+        auth = f"{user}:{passwd}"
+
+    credentials = {
+        "host": parts.host,
+        "port": parts.port,
+        "use_ssl": True,
+        "http_auth": auth,
+    }
 
 api = create_api(
     credentials=credentials,
