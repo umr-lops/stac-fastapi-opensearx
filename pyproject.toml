@@ -8,12 +8,20 @@ dependencies = [
     "stac-fastapi.extensions",
     "starlette",
     "aiohttp",
+    "more-itertools",
+    "attrs",
+    "pystac",
+    "uvicorn",
+    "rich",
 ]
 dynamic = ["version"]
 
 [project.optional-dependencies]
 elasticsearch = [
     "elasticsearch<8"
+]
+webapi = [
+    "feedparser",
 ]
 
 [build-system]
