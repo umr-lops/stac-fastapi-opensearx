@@ -75,10 +75,6 @@ else:
         "http_auth": auth,
     }
 
-    import pathlib
-
-    print(list(pathlib.Path("/app").iterdir()))
-
 api = create_api(
     credentials=credentials,
     dialect=args.dialect,
