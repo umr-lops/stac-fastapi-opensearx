@@ -69,7 +69,7 @@ else:
         auth = f"{user}:{passwd}"
 
     credentials = {
-        "host": parts.host,
+        "host": parts.hostname,
         "port": parts.port,
         "use_ssl": True,
         "http_auth": auth,
