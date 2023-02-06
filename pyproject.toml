@@ -18,7 +18,8 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 elasticsearch = [
-    "elasticsearch<8"
+    "elasticsearch<8",
+    "odc-geo",
 ]
 webapi = [
     "feedparser",
