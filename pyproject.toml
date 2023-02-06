@@ -20,7 +20,7 @@ dynamic = ["version"]
 elasticsearch = [
     "elasticsearch<8",
     "odc-geo",
-    "dateutil",
+    "python-dateutil",
 ]
 webapi = [
     "feedparser",
