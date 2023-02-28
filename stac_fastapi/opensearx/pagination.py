@@ -63,7 +63,6 @@ def post_url(obj):
 
 
 def post_link(rel, url, page, total_pages, limit):
-
     if rel == "self":
         new_page = page
     elif rel == "next":
