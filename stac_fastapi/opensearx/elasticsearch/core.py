@@ -134,6 +134,8 @@ class ElasticsearchClient(AsyncBaseCoreClient):
 
         params = await request.json()
 
+        print("request:", "\n - ".join(f"{k}: {v}" for k, v in params.items()))
+
         token = params.get("token")
 
         new_token, items = await self.client.search(search_request, token=token)
